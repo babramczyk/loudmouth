@@ -32,7 +32,6 @@
   },
   "main": "index.coffee",
   "scripts": {
-    "pretest": "./node_modules/.bin/eslint ./src",
-    "test": "grunt test"
+    "pretest": "./node_modules/.bin/eslint ./src"
   }
 }
