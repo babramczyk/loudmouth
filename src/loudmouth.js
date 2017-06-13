@@ -20,23 +20,49 @@ module.exports = function (robot) {
         /i'?m hard of hearing/i
     ];
 
-    let lastMessages = {};
-    let lastMsgWasLoudmouth = {};
+    if (!robot.brain.get('loudmouth')) {
+        robot.brain.set('loudmouth', {});
+    }
 
-    robot.brain.set('loudmouth', {
-        lastMessages        : lastMessages,
-        lastMsgWasLoudmouth : lastMsgWasLoudmouth
-    });
+    function setLastMessageByRoom(room, message) {
+        let loudmouth = robot.brain.get('loudmouth');
 
-    /* eslint-disable require-jsdoc */
+        // add the room if it does not exist in memory
+        if (!loudmouth[room]) {
+            loudmouth[room] = {
+                lastMsgWasLoudmouth : false
+            };
+        }
+
+        loudmouth[room].text = message;
+        robot.brain.set('loudmouth', loudmouth);
+    }
+
     function getLastMessageByRoom(room) {
-        return robot.brain.get('loudmouth').lastMessages[room];
+        let loudmouth = robot.brain.get('loudmouth');
+        if (!loudmouth[room] || !loudmouth[room].text) {
+            return '';
+        }
+        return loudmouth[room].text;
     }
 
-    function lastMessageWasLoudmouth(room) {
-        return robot.brain.get('loudmouth').lastMsgWasLoudmouth[room];
+    function setLastMessageWasLoudmouth(room, value) {
+        let loudmouth = robot.brain.get('loudmouth');
+        if (!loudmouth[room]) {
+            throw new Error('Tried to set lastMessage bool' +
+                'without the room being defined in memory');
+        }
+        loudmouth[room].lastMsgWasLoudmouth = value;
+        robot.brain.set('loudmouth', loudmouth);
     }
-    /* eslint-enable require-jsdoc */
+
+    function getLastMessageWasLoudmouth(room) {
+        let loudmouth = robot.brain.get('loudmouth');
+        if (!loudmouth[room]) {
+            return false;
+        }
+        return loudmouth[room].lastMsgWasLoudmouth;
+    }
 
     /**
      * Replies in a chatroom with the last message sent in all caps
@@ -47,13 +73,13 @@ module.exports = function (robot) {
         // let user = res.message.user.name;
         let lastMessage = getLastMessageByRoom(room);
 
-        if (!lastMessage) {
+        if (typeof lastMessage !== 'string' || !lastMessage.length) {
             return;
         }
 
         // robot.messageRoom(room, user + lastMessages[room]);
         res.reply(lastMessage.toUpperCase());
-        lastMsgWasLoudmouth[room] = true;
+        setLastMessageWasLoudmouth(room, true);
     }
 
     prompts.forEach(function (phrase) {
@@ -64,9 +90,9 @@ module.exports = function (robot) {
     robot.hear(/(.*)/, function (res) {
         let room = res.message.room;
 
-        if (!lastMessageWasLoudmouth(room)) {
-            lastMessages[room] = res.message.text;
+        if (!getLastMessageWasLoudmouth(room)) {
+            setLastMessageByRoom(room, res.message.text)
         }
-        lastMsgWasLoudmouth[room] = false;
+        setLastMessageWasLoudmouth(room, false);
     });
 };
