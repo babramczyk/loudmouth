@@ -20,9 +20,14 @@ module.exports = function (robot) {
         /i'?m hard of hearing/i
     ];
 
-    if (!robot.brain.get('loudmouth')) {
-        robot.brain.set('loudmouth', {});
-    }
+    robot.brain.on('loaded', function () {
+        // Set timeout since there is a lag between discovering redis and loading data.
+        setTimeout(function () {
+            if (!robot.brain.get('loudmouth')) {
+                robot.brain.set('loudmouth', {});
+            }
+        }, 200);
+    });
 
     /**
      * Sets the last message sent in a given room
