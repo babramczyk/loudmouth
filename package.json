@@ -1,7 +1,7 @@
 {
   "name": "hubot--loudmouth",
   "description": "A Hubot script that helps those who are hard of hearing.",
-  "version": "2.0.5",
+  "version": "2.1.0",
   "author": "babramczyk <bjabramczyk@gmail.com>",
   "license": "MIT",
   "keywords": [
