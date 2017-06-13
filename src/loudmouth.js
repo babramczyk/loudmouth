@@ -8,20 +8,17 @@
 //   babramczyk[@<bjabramczyk@gmail.com>]
 
 module.exports = function (robot) {
-    const interrogatives = [
-        /w+h+a+t+/,
-        /w+a+t+/,
-        /w+u+t+/,
-        /wot/,
-        /h+u+h+/,
-        /w+h+a+/,
-        /wha+t+ now/,
-        /repeat that+/,
-        /come again/
-    ];
     const prompts = [
+        /w+h+a+t*[.!?\s]*$/i,
+        /w+a+t+[.!?\s]*$/i,
+        /w+u+t+[.!?\s]*$/i,
+        /wot[.!?\s]*$/i,
+        /h+u+h+[.!?\s]*$/i,
+        /w+h+a+t+ n+o+w+[.!?\s]*$/i,
+        /repeat+ that+[.!?\s]*$/i,
+        /come+ again+[.!?\s]*$/i,
         /wha+t+ do+ (yo+u+|u+) mean+/i,
-        /w+h+a+t+ did (you+|u+) (just )?sa+y+/i,
+        /w+h+a+t+ did+ (you+|u+) (just )?sa+y+/i,
         /i+ ca+n'?t+ h+e+a+r+( (you+|u+))?/i,
         /i'?m hard of hearing/i
     ];
@@ -34,16 +31,12 @@ module.exports = function (robot) {
      * @param    {Object} res the Hubot chatroom object
      */
     function repeat(res) {
-        if (!lastMsg) return;
-
+        if (!lastMsg) {
+            return;
+        }
         res.reply(lastMsg);
         lastMsgWasLoudmouth = true;
     }
-
-    interrogatives.forEach(function (phrase) {
-        let regex = new RegExp(phrase + /[.!?\s]*$/, 'i');
-        robot.hear(regex, repeat);
-    });
 
     prompts.forEach(function (phrase) {
         robot.hear(phrase, repeat);
