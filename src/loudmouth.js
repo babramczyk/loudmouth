@@ -1,9 +1,6 @@
 // Description
 //   A hubot script that helps those who are hard of hearing.
 //
-// Commands:
-//   what, repeat that, etc. - Repeats the second to last message in all caps
-//
 // Author:
 //   babramczyk[@<bjabramczyk@gmail.com>]
 
@@ -23,19 +20,40 @@ module.exports = function (robot) {
         /i'?m hard of hearing/i
     ];
 
-    let lastMsg;
-    let lastMsgWasLoudmouth = false;
+    let lastMessages = {};
+    let lastMsgWasLoudmouth = {};
+
+    robot.brain.set('loudmouth', {
+        lastMessages        : lastMessages,
+        lastMsgWasLoudmouth : lastMsgWasLoudmouth
+    });
+
+    /* eslint-disable require-jsdoc */
+    function getLastMessageByRoom(room) {
+        return robot.brain.get('loudmouth').lastMessages[room];
+    }
+
+    function lastMessageWasLoudmouth(room) {
+        return robot.brain.get('loudmouth').lastMsgWasLoudmouth[room];
+    }
+    /* eslint-enable require-jsdoc */
 
     /**
      * Replies in a chatroom with the last message sent in all caps
      * @param    {Object} res the Hubot chatroom object
      */
     function repeat(res) {
-        if (!lastMsg) {
+        let room       = res.message.room;
+        // let user = res.message.user.name;
+        let lastMessage = getLastMessageByRoom(room);
+
+        if (!lastMessage) {
             return;
         }
-        res.reply(lastMsg);
-        lastMsgWasLoudmouth = true;
+
+        // robot.messageRoom(room, user + lastMessages[room]);
+        res.reply(lastMessage.toUpperCase());
+        lastMsgWasLoudmouth[room] = true;
     }
 
     prompts.forEach(function (phrase) {
@@ -44,9 +62,11 @@ module.exports = function (robot) {
 
     // Store last message if it is text and wasn't a Loudmouth message
     robot.hear(/(.*)/, function (res) {
-        if (!lastMsgWasLoudmouth) {
-            lastMsg = res.match[1].toUpperCase();
+        let room = res.message.room;
+
+        if (!lastMessageWasLoudmouth(room)) {
+            lastMessages[room] = res.message.text;
         }
-        lastMsgWasLoudmouth = false;
+        lastMsgWasLoudmouth[room] = false;
     });
 };
