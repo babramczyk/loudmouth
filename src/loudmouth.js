@@ -24,6 +24,11 @@ module.exports = function (robot) {
         robot.brain.set('loudmouth', {});
     }
 
+    /**
+     * Sets the last message sent in a given room
+     * @param {string} room    the room to set the last message
+     * @param {string} message the last message sent in the room
+     */
     function setLastMessageByRoom(room, message) {
         let loudmouth = robot.brain.get('loudmouth');
 
@@ -38,6 +43,11 @@ module.exports = function (robot) {
         robot.brain.set('loudmouth', loudmouth);
     }
 
+    /**
+     * Gets the last message sent in a given room
+     * @param  {string} room the room to see the last message of
+     * @return {string}      the last message sent in that room
+     */
     function getLastMessageByRoom(room) {
         let loudmouth = robot.brain.get('loudmouth');
         if (!loudmouth[room] || !loudmouth[room].text) {
@@ -46,6 +56,12 @@ module.exports = function (robot) {
         return loudmouth[room].text;
     }
 
+    /**
+     * Sets a true/false value for a chat room to say if the last message sent
+     * in it was sent by Loudmouth.
+     * @param {string} room  the room to check for
+     * @param {bool} value if the last message sent in the room was Loudmouth
+     */
     function setLastMessageWasLoudmouth(room, value) {
         let loudmouth = robot.brain.get('loudmouth');
         if (!loudmouth[room]) {
@@ -56,6 +72,11 @@ module.exports = function (robot) {
         robot.brain.set('loudmouth', loudmouth);
     }
 
+    /**
+     * Sees if the last message sent in a room was by Loudmouth
+     * @param  {string} room the room to check for
+     * @return {bool}      if the last message sent in the room was Loudmouth
+     */
     function getLastMessageWasLoudmouth(room) {
         let loudmouth = robot.brain.get('loudmouth');
         if (!loudmouth[room]) {
@@ -91,7 +112,7 @@ module.exports = function (robot) {
         let room = res.message.room;
 
         if (!getLastMessageWasLoudmouth(room)) {
-            setLastMessageByRoom(room, res.message.text)
+            setLastMessageByRoom(room, res.message.text);
         }
         setLastMessageWasLoudmouth(room, false);
     });
