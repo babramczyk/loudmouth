@@ -4,6 +4,8 @@
 // Author:
 //   babramczyk[@<bjabramczyk@gmail.com>]
 
+const REDIS_KEY = 'loudmouth';
+
 module.exports = function (robot) {
     const prompts = [
         /w+h+a+t*[.!?\s]*$/i,
@@ -20,14 +22,27 @@ module.exports = function (robot) {
         /i'?m hard of hearing/i
     ];
 
-    robot.brain.on('loaded', function () {
-        // Set timeout since there is a lag between discovering redis and loading data.
-        setTimeout(function () {
-            if (!robot.brain.get('loudmouth')) {
-                robot.brain.set('loudmouth', {});
-            }
-        }, 200);
-    });
+    /**
+     * Get loudmouth data saved in the brain
+     * @returns {Object} Loudmouth data stored in the brain
+     */
+    function getLoudmouth() {
+        if (!robot.brain.get(REDIS_KEY)) {
+            return {};
+        }
+        return robot.brain.get(REDIS_KEY);
+    }
+
+    /**
+     * Update loudmouth data stored in the brain
+     * @param {Object} loudmouthInfo - loudmouth data to store in the brain
+     */
+    function setLoudmouth(loudmouthInfo) {
+        if (!loudmouthInfo) {
+            return;
+        }
+        robot.brain.set(REDIS_KEY, loudmouthInfo);
+    }
 
     /**
      * Sets the last message sent in a given room
@@ -35,7 +50,7 @@ module.exports = function (robot) {
      * @param {string} message the last message sent in the room
      */
     function setLastMessageByRoom(room, message) {
-        let loudmouth = robot.brain.get('loudmouth');
+        let loudmouth = getLoudmouth();
 
         // add the room if it does not exist in memory
         if (!loudmouth[room]) {
@@ -45,7 +60,7 @@ module.exports = function (robot) {
         }
 
         loudmouth[room].text = message;
-        robot.brain.set('loudmouth', loudmouth);
+        setLoudmouth(loudmouth);
     }
 
     /**
@@ -54,7 +69,7 @@ module.exports = function (robot) {
      * @return {string}      the last message sent in that room
      */
     function getLastMessageByRoom(room) {
-        let loudmouth = robot.brain.get('loudmouth');
+        let loudmouth = getLoudmouth();
         if (!loudmouth[room] || !loudmouth[room].text) {
             return '';
         }
@@ -68,13 +83,13 @@ module.exports = function (robot) {
      * @param {bool} value if the last message sent in the room was Loudmouth
      */
     function setLastMessageWasLoudmouth(room, value) {
-        let loudmouth = robot.brain.get('loudmouth');
+        let loudmouth = getLoudmouth();
         if (!loudmouth[room]) {
             throw new Error('Tried to set lastMessage bool' +
                 'without the room being defined in memory');
         }
         loudmouth[room].lastMsgWasLoudmouth = value;
-        robot.brain.set('loudmouth', loudmouth);
+        setLoudmouth(loudmouth);
     }
 
     /**
@@ -83,7 +98,7 @@ module.exports = function (robot) {
      * @return {bool}      if the last message sent in the room was Loudmouth
      */
     function getLastMessageWasLoudmouth(room) {
-        let loudmouth = robot.brain.get('loudmouth');
+        let loudmouth = getLoudmouth();
         if (!loudmouth[room]) {
             return false;
         }
@@ -115,7 +130,6 @@ module.exports = function (robot) {
     // Store last message if it is text and wasn't a Loudmouth message
     robot.hear(/(.*)/, function (res) {
         let room = res.message.room;
-
         if (!getLastMessageWasLoudmouth(room)) {
             setLastMessageByRoom(room, res.message.text);
         }
